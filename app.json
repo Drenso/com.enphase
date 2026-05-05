@@ -26,15 +26,18 @@
     "xlarge": "/assets/images/xlarge.png"
   },
   "author": {
-    "name": "Emile Nijssen",
-    "email": "emile@athom.nl"
+    "name": "Drenso V.O.F."
   },
   "support": "mailto:homey-enphase@drenso.nl",
-  "source": "https://github.com/WeeJeWel/com.enphase",
+  "source": "https://github.com/Drenso/com.enphase",
   "contributors": {
     "developers": [
       {
         "name": "Maikel van de Wouw"
+      },
+      {
+        "name": "Emile Nijssen",
+        "email": "emile@athom.nl"
       }
     ]
   },

@@ -2,12 +2,12 @@ import Homey from 'homey';
 import EnphaseAPI from './EnphaseAPI.mjs';
 
 export default class EnphaseDriver extends Homey.Driver {
-  async onPair(session) {
-    let api;
-    let username;
-    let password;
+  public async onPair(session: Homey.Driver.PairSession): Promise<void> {
+    let api: EnphaseAPI;
+    let username: string;
+    let password: string;
 
-    session.setHandler('login', async data => {
+    session.setHandler('login', async (data: { username: string; password: string }) => {
       username = data.username;
       password = data.password;
 
@@ -19,7 +19,7 @@ export default class EnphaseDriver extends Homey.Driver {
         await api.login();
         return true;
       } catch (err) {
-        this.error(`Login Error: ${err.message}`);
+        this.error(`Login Error: ${(err as { message: unknown }).message}`);
         return false;
       }
     });

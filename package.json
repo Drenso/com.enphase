@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
+    "build": "tsc",
     "lint": "eslint",
     "fix": "eslint --fix",
     "validate": "homey app validate --level=verified",
@@ -12,10 +13,14 @@
   "devDependencies": {
     "@drenso/eslint-config-homey-mts": "1.2.0",
     "@drenso/prettier-config-homey-mts": "1.2.0",
+    "@tsconfig/node20": "20.1.9",
     "@types/homey": "npm:homey-apps-sdk-v3-types@^0.3.10",
+    "@types/node": "24.11.0",
     "eslint": "9.39.4",
     "eslint-config-prettier": "10.1.8",
-    "prettier": "3.8.3"
+    "prettier": "3.8.3",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.56.1"
   },
   "dependencies": {
     "node-fetch": "^3.3.2"

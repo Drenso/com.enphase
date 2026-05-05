@@ -1,24 +1,76 @@
 import { URLSearchParams, URL } from 'url';
 import fetch from 'node-fetch';
 
+interface EnphaseCredentials {
+  username?: string;
+  password?: string;
+}
+
+interface EnphaseTokenRequest extends EnphaseCredentials {
+  serialNumber: string | null;
+}
+
+export interface EnphaseSiteData {
+  module?: {
+    info?: {
+      title: string | null;
+    };
+    lifetime?: {
+      lifetimeEnergy?: {
+        value: number | null;
+      };
+    };
+  };
+}
+
+export interface EnphaseSiteTodayData {
+  stats?: {
+    [key: string]: {
+      totals?: {
+        production?: number;
+        consumption?: number;
+        import?: number;
+        export?: number;
+        charge?: number;
+        discharge?: number;
+      };
+    };
+  };
+  latest_power?: {
+    value: number | null;
+  };
+  connectionDetails?: {
+    [key: number]: {
+      ethernet?: boolean;
+      wifi?: boolean | string;
+      cellular?: boolean;
+    };
+  };
+  battery_details?: {
+    aggregate_soc?: number;
+  };
+  last_report_date?: number;
+}
+
 export default class EnphaseAPI {
-  cookies = [];
-  headers = {
+  private cookies: string[] = [];
+  private headers = {
     'User-Agent':
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
   };
-  siteId = null;
+  private username?: string;
+  private password?: string;
 
-  constructor({ username = null, password = null } = {}) {
+  public constructor({ username, password }: EnphaseCredentials) {
     this.username = username;
     this.password = password;
   }
 
-  isLoggedIn() {
+  public isLoggedIn(): boolean {
     return this.cookies.length > 0;
   }
 
-  async login({ username = this.username, password = this.password } = []) {
+  public async login({ username = this.username, password = this.password } = {}): Promise<void> {
     if (!username) {
       throw new Error('Missing Username');
     }
@@ -44,7 +96,7 @@ export default class EnphaseAPI {
     this.cookies = res.headers.raw()['set-cookie'].map(cookie => cookie.split(';')[0]);
   }
 
-  async loginJSON({ username = this.username, password = this.password } = []) {
+  public async loginJSON({ username = this.username, password = this.password } = {}): Promise<{ session_id: string }> {
     if (!username) {
       throw new Error('Missing Username');
     }
@@ -70,10 +122,10 @@ export default class EnphaseAPI {
       throw new Error(res.statusText);
     }
 
-    return await res.json();
+    return (await res.json()) as { session_id: string };
   }
 
-  async getSiteIds() {
+  public async getSiteIds(): Promise<number[]> {
     if (!this.isLoggedIn()) {
       await this.login();
     }
@@ -113,19 +165,19 @@ export default class EnphaseAPI {
 
     // If there are multiple systems, we need to get the siteIds from the JSON response
     if (contentType?.includes('text/javascript')) {
-      const json = await res.json();
+      const json = (await res.json()) as { map_data: { id: number }[] };
 
       if (!Array.isArray(json.map_data)) {
         throw new Error('Invalid Map Data');
       }
 
-      return json.map_data.map(system => system.id);
+      return json.map_data.map((system: { id: number }) => system.id);
     }
 
     throw new Error('Error Getting Site IDs');
   }
 
-  async getSiteData({ siteId } = {}) {
+  public async getSiteData({ siteId }: { siteId: number }): Promise<EnphaseSiteData> {
     if (!this.isLoggedIn()) {
       await this.login();
     }
@@ -150,10 +202,10 @@ export default class EnphaseAPI {
       throw new Error(res.statusText ?? 'Error Getting Site Data');
     }
 
-    return await res.json();
+    return (await res.json()) as EnphaseSiteData;
   }
 
-  async getSiteToday({ siteId } = {}) {
+  public async getSiteToday({ siteId }: { siteId: number }): Promise<EnphaseSiteTodayData> {
     if (!this.isLoggedIn()) {
       await this.login();
     }
@@ -178,10 +230,14 @@ export default class EnphaseAPI {
       throw new Error(res.statusText ?? 'Error Getting Site Today');
     }
 
-    return await res.json();
+    return (await res.json()) as EnphaseSiteTodayData;
   }
 
-  async getEntrezToken({ username = this.username, password = this.password, serialNumber = null }) {
+  public async getEntrezToken({
+    username = this.username,
+    password = this.password,
+    serialNumber = null,
+  }: EnphaseTokenRequest): Promise<string> {
     if (!username) {
       throw new Error('Missing Username');
     }

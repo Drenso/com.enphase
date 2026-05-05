@@ -1,7 +1,7 @@
 import EnphaseDevice from '../../lib/EnphaseDevice.mjs';
 
 export default class EnphaseDeviceIQBattery extends EnphaseDevice {
-  async onPollCloud() {
+  protected async onPollCloud(): Promise<void> {
     await super.onPollCloud();
 
     const { siteId } = this.getData();
@@ -91,23 +91,25 @@ export default class EnphaseDeviceIQBattery extends EnphaseDevice {
 
     // Last Update
     const lastseen = todayData?.last_report_date;
-    const dateObject = new Date(lastseen * 1000);
-    const dateString = dateObject
-      .toLocaleString('nl-NL', {
-        timeZone: 'Europe/Amsterdam', // Forceert de juiste tijdzone incl. wintertijd
-        day: '2-digit',
-        month: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false, // Forceert 24-uurs notatie
-      })
-      .replace(',', ''); // Verwijdert de komma die JS soms tussen datum en tijd zet
+    if (typeof lastseen === 'number') {
+      const dateObject = new Date(lastseen * 1000);
+      const dateString = dateObject
+        .toLocaleString('nl-NL', {
+          timeZone: 'Europe/Amsterdam', // Forceert de juiste tijdzone incl. wintertijd
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false, // Forceert 24-uurs notatie
+        })
+        .replace(',', ''); // Verwijdert de komma die JS soms tussen datum en tijd zet
 
-    if (typeof dateString === 'string' || typeof lastseen === 'number') {
-      // Werk de iqbattery_last_update capability bij met de geformatteerde laatste-update
-      await this.setCapabilityValue('iqbattery_last_update', dateString).catch(err =>
-        this.error('Error iqbattery_last_update:', err),
-      );
+      if (typeof dateString === 'string') {
+        // Werk de iqbattery_last_update capability bij met de geformatteerde laatste-update
+        await this.setCapabilityValue('iqbattery_last_update', dateString).catch(err =>
+          this.error('Error iqbattery_last_update:', err),
+        );
+      }
     }
   }
 }

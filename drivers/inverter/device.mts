@@ -1,16 +1,34 @@
 import https from 'https';
 import fetch from 'node-fetch';
 import EnphaseDevice from '../../lib/EnphaseDevice.mjs';
+import type { DiscoveryResult } from 'homey';
+import type { DiscoveryStrategy } from 'homey';
+
+interface ImprovedDiscoveryResult extends DiscoveryResult {
+  address: string;
+  txt: {
+    serialnum: string;
+  };
+}
+
+interface EnphaseLocalProductionData {
+  production: {
+    type: string;
+    wNow: number;
+    whLifetime: number;
+  }[];
+}
 
 export default class EnphaseDeviceInverter extends EnphaseDevice {
-  localAgent = new https.Agent({
+  private localAgent = new https.Agent({
     rejectUnauthorized: false,
   });
-  localSerialNumber = null;
-  localAddress = null;
-  localToken = null;
+  private localSerialNumber: string | null = null;
+  private localAddress: string | null = null;
+  private localToken: string | null = null;
+  private discoveryStrategy!: DiscoveryStrategy;
 
-  async onInit() {
+  public async onInit(): Promise<void> {
     await super.onInit();
 
     const { siteId } = this.getData();
@@ -29,7 +47,7 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
     }
   }
 
-  async onPollCloud() {
+  protected async onPollCloud(): Promise<void> {
     await super.onPollCloud();
 
     const { siteId } = this.getData();
@@ -59,7 +77,7 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
     }
   }
 
-  async onPollLocal() {
+  protected async onPollLocal(): Promise<void> {
     await super.onPollLocal();
 
     if (!this.localAddress) return;
@@ -83,7 +101,7 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
 
     switch (res.status) {
       case 200: {
-        const body = await res.json();
+        const body = (await res.json()) as EnphaseLocalProductionData;
 
         if (Array.isArray(body.production)) {
           const productionInverters = body.production.find(item => item.type === 'inverters');
@@ -127,18 +145,20 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
     }
   }
 
-  onDiscoveryResult(discoveryResult) {
-    this.log(`Local Envoy Found: ${discoveryResult.address} — S/N: ${discoveryResult.txt.serialnum}`);
+  public onDiscoveryResult(discoveryResult: DiscoveryResult): boolean {
+    const improvedDiscoveryResult = discoveryResult as ImprovedDiscoveryResult;
+    this.log(`Local Envoy Found: ${improvedDiscoveryResult.address} — S/N: ${improvedDiscoveryResult.txt.serialnum}`);
 
     this.localToken = null;
-    this.localAddress = discoveryResult.address;
-    this.localSerialNumber = discoveryResult.txt.serialnum;
+    this.localAddress = improvedDiscoveryResult.address;
+    this.localSerialNumber = improvedDiscoveryResult.txt.serialnum;
 
     discoveryResult.once('addressChanged', () => {
-      this.log(`Local Envoy Address Changed: ${this.localAddress} → ${discoveryResult.address}`);
-      this.localAddress = discoveryResult.address;
+      this.log(`Local Envoy Address Changed: ${this.localAddress} → ${improvedDiscoveryResult.address}`);
+      this.localAddress = improvedDiscoveryResult.address;
     });
 
     this.pollLocal();
+    return true;
   }
 }

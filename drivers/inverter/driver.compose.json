@@ -4,10 +4,7 @@
     "en": "Inverter"
   },
   "class": "solarpanel",
-  "capabilities": [
-    "meter_power",
-    "meter_power.day"
-  ],
+  "capabilities": ["meter_power", "meter_power.day"],
   "capabilitiesOptions": {
     "measure_power": {
       "en": "Generated Power",

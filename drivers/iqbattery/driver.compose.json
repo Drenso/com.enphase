@@ -28,9 +28,7 @@
     }
   },
   "energy": {
-    "batteries": [
-      "INTERNAL"
-    ]
+    "batteries": ["INTERNAL"]
   },
   "images": {
     "small": "{{driverAssetsPath}}/images/small.png",

@@ -3,7 +3,6 @@ import fetch from 'node-fetch';
 import EnphaseDevice from '../../lib/EnphaseDevice.mjs';
 
 export default class EnphaseDeviceInverter extends EnphaseDevice {
-
   localAgent = new https.Agent({
     rejectUnauthorized: false,
   });
@@ -23,7 +22,7 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
         this.onDiscoveryResult(discoveryResult);
       });
 
-      const discoveryResults = this.discoveryStrategy.getDiscoveryResults()
+      const discoveryResults = this.discoveryStrategy.getDiscoveryResults();
       for (const discoveryResult of Object.values(discoveryResults)) {
         this.onDiscoveryResult(discoveryResult);
       }
@@ -47,14 +46,16 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
 
     const meterPower = siteData?.module?.lifetime?.lifetimeEnergy?.value; // in Wh
     if (typeof meterPower === 'number') {
-      await this.setCapabilityValue('meter_power', meterPower / 1000)
-        .catch(err => this.error('Error setting meter_power:', err));
+      await this.setCapabilityValue('meter_power', meterPower / 1000).catch(err =>
+        this.error('Error setting meter_power:', err),
+      );
     }
 
     const meterPowerDay = todayData?.stats?.[0]?.totals?.production; // in Wh
     if (typeof meterPowerDay === 'number') {
-      await this.setCapabilityValue('meter_power.day', meterPowerDay / 1000)
-        .catch(err => this.error('Error setting meter_power.day:', err));
+      await this.setCapabilityValue('meter_power.day', meterPowerDay / 1000).catch(err =>
+        this.error('Error setting meter_power.day:', err),
+      );
     }
   }
 
@@ -73,9 +74,9 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
     const res = await fetch(`https://${this.localAddress}/production.json?details=1`, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.localToken}`,
+        Authorization: `Bearer ${this.localToken}`,
       },
       agent: this.localAgent,
     });
@@ -88,13 +89,15 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
           const productionInverters = body.production.find(item => item.type === 'inverters');
           if (productionInverters) {
             if (typeof productionInverters.wNow === 'number') {
-              await Promise.resolve().then(async () => {
-                if (!this.hasCapability('measure_power')) {
-                  await this.addCapability('measure_power');
-                }
+              await Promise.resolve()
+                .then(async () => {
+                  if (!this.hasCapability('measure_power')) {
+                    await this.addCapability('measure_power');
+                  }
 
-                await this.setCapabilityValue('measure_power', productionInverters.wNow);
-              }).catch(err => this.error('Error Setting measure_power:', err));
+                  await this.setCapabilityValue('measure_power', productionInverters.wNow);
+                })
+                .catch(err => this.error('Error Setting measure_power:', err));
             }
 
             // This is disabled, because it might interfere with the cloud values.
@@ -121,7 +124,7 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
       default: {
         throw new Error(res.statusText);
       }
-    };
+    }
   }
 
   onDiscoveryResult(discoveryResult) {
@@ -138,5 +141,4 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
 
     this.pollLocal();
   }
-
-};
+}

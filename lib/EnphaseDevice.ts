@@ -1,5 +1,5 @@
 import Homey from 'homey';
-import EnphaseAPI from './EnphaseAPI.mjs';
+import EnphaseAPI from './EnphaseAPI.js';
 
 export default class EnphaseDevice extends Homey.Device {
   private static POLL_INTERVAL_CLOUD = 1000 * 60 * 5; // 5 minutes

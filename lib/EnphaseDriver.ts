@@ -1,5 +1,5 @@
 import Homey from 'homey';
-import EnphaseAPI from './EnphaseAPI.mjs';
+import EnphaseAPI from './EnphaseAPI.js';
 
 export default class EnphaseDriver extends Homey.Driver {
   public async onPair(session: Homey.Driver.PairSession): Promise<void> {

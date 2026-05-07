@@ -1,6 +1,6 @@
 import https from 'https';
 import fetch from 'node-fetch';
-import EnphaseDevice from '../../lib/EnphaseDevice.mjs';
+import EnphaseDevice from '../../lib/EnphaseDevice.js';
 import type { DiscoveryResult } from 'homey';
 import type { DiscoveryStrategy } from 'homey';
 

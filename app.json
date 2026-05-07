@@ -41,6 +41,7 @@
       }
     ]
   },
+  "esm": true,
   "drivers": [
     {
       "platforms": [

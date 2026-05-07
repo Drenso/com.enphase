@@ -1,4 +1,4 @@
-import EnphaseDevice from '../../lib/EnphaseDevice.mjs';
+import EnphaseDevice from '../../lib/EnphaseDevice.js';
 
 export default class EnphaseDeviceIQBattery extends EnphaseDevice {
   protected async onPollCloud(): Promise<void> {

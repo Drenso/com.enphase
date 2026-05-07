@@ -171,7 +171,7 @@ export default class EnphaseAPI {
         throw new Error('Invalid Map Data');
       }
 
-      return json.map_data.map((system: { id: number }) => system.id);
+      return json.map_data.map(system => system.id);
     }
 
     throw new Error('Error Getting Site IDs');

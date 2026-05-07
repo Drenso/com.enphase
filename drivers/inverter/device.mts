@@ -4,7 +4,7 @@ import EnphaseDevice from '../../lib/EnphaseDevice.mjs';
 import type { DiscoveryResult } from 'homey';
 import type { DiscoveryStrategy } from 'homey';
 
-interface ImprovedDiscoveryResult extends DiscoveryResult {
+interface EnphaseDiscoveryResult extends DiscoveryResult {
   address: string;
   txt: {
     serialnum: string;
@@ -42,7 +42,7 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
 
       const discoveryResults = this.discoveryStrategy.getDiscoveryResults();
       for (const discoveryResult of Object.values(discoveryResults)) {
-        this.onDiscoveryResult(discoveryResult);
+        this.onDiscoveryResult(discoveryResult as EnphaseDiscoveryResult);
       }
     }
   }
@@ -145,17 +145,16 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
     }
   }
 
-  public onDiscoveryResult(discoveryResult: DiscoveryResult): boolean {
-    const improvedDiscoveryResult = discoveryResult as ImprovedDiscoveryResult;
-    this.log(`Local Envoy Found: ${improvedDiscoveryResult.address} — S/N: ${improvedDiscoveryResult.txt.serialnum}`);
+  public onDiscoveryResult(discoveryResult: EnphaseDiscoveryResult): boolean {
+    this.log(`Local Envoy Found: ${discoveryResult.address} — S/N: ${discoveryResult.txt.serialnum}`);
 
     this.localToken = null;
-    this.localAddress = improvedDiscoveryResult.address;
-    this.localSerialNumber = improvedDiscoveryResult.txt.serialnum;
+    this.localAddress = discoveryResult.address;
+    this.localSerialNumber = discoveryResult.txt.serialnum;
 
     discoveryResult.once('addressChanged', () => {
-      this.log(`Local Envoy Address Changed: ${this.localAddress} → ${improvedDiscoveryResult.address}`);
-      this.localAddress = improvedDiscoveryResult.address;
+      this.log(`Local Envoy Address Changed: ${this.localAddress} → ${discoveryResult.address}`);
+      this.localAddress = discoveryResult.address;
     });
 
     this.pollLocal();

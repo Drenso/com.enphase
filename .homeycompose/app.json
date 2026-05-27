@@ -1,6 +1,6 @@
 {
   "id": "com.enphase",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "compatibility": ">=12.2.0",
   "brandColor": "#F27321",
   "sdk": 3,

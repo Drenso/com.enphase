@@ -34,5 +34,8 @@
   },
   "0.8.1": {
     "en": "Fix internal logging issue"
+  },
+  "0.8.2": {
+    "en": "Update inverter icon"
   }
 }

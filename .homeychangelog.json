@@ -31,5 +31,8 @@
   },
   "0.8.0": {
     "en": "App ownership transferred, update store information, migrate code and add official community topic."
+  },
+  "0.8.1": {
+    "en": "Fix internal logging issue"
   }
 }

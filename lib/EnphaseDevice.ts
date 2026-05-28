@@ -2,8 +2,23 @@ import Homey from 'homey';
 import EnphaseAPI from './EnphaseAPI.js';
 
 export default class EnphaseDevice extends Homey.Device {
+  /** Lower cloud poll interval to prevent rate limiting. */
   private static POLL_INTERVAL_CLOUD = 1000 * 60 * 5; // 5 minutes
-  private static POLL_INTERVAL_LOCAL = 1000 * 5; // 5 seconds
+
+  /**
+   * The integration collects data for all entities by default every 60 seconds.
+   *
+   * Envoy installations without installed CT, collect individual solar inverter data every 5 minutes.
+   * This collection does not occur for each inverter at the same time in the 5-minute period.
+   * Shortening the collection interval will at best show updates for individual inverters quicker,
+   * but not yield more granular data.
+   *
+   * With installed CT, data granularity increases and shortening the collection interval can provide
+   * more details. The Envoy, however, has no unlimited resources and shortening the collection
+   * interval may result in dropped connections, Envoy freeze or restarts.
+   */
+  private static POLL_INTERVAL_LOCAL = 1000 * 60; // 60 seconds
+
   protected api!: EnphaseAPI;
   private pollIntervalCloud!: NodeJS.Timeout;
   private pollIntervalLocal!: NodeJS.Timeout;

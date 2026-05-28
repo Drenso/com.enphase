@@ -26,7 +26,7 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
   private localSerialNumber: string | null = null;
   private localAddress: string | null = null;
   private localToken: string | null = null;
-  private discoveryStrategy!: DiscoveryStrategy;
+  private discoveryStrategy?: DiscoveryStrategy;
 
   public async onInit(): Promise<void> {
     await super.onInit();

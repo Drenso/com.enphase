@@ -1,0 +1,8 @@
+[
+  {
+    "$extends": "username"
+  },
+  {
+    "$extends": "password"
+  }
+]

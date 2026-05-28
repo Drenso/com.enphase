@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@drenso/homey-log": "10.5400.0",
+    "fast-xml-parser": "5.8.0",
     "node-fetch": "3.3.2",
     "source-map-support": "0.5.21"
   }

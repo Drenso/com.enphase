@@ -1,0 +1,8 @@
+{
+  "type": "text",
+  "label": {
+    "en": "Envoy IP address",
+    "nl": "Envoy IP-adres"
+  },
+  "value": ""
+}

@@ -51,6 +51,7 @@ export default class EnphaseDevice extends Homey.Device {
   }
 
   private pollCloud(): void {
+    this.debug('Executing cloud poll');
     this.onPollCloud()
       .then(() => {
         this.setAvailable().catch(err => this.error(`Error Setting Available: ${err.message}`));
@@ -66,6 +67,7 @@ export default class EnphaseDevice extends Homey.Device {
   }
 
   protected pollLocal(): void {
+    this.debug('Executing local poll');
     this.onPollLocal().catch(err => {
       this.error(`Error Polling Local: ${err.message}`);
     });
@@ -90,5 +92,13 @@ export default class EnphaseDevice extends Homey.Device {
 
       this.pollCloud();
     }
+  }
+
+  public debug(...args: unknown[]): void {
+    if (Homey.env.DEBUG !== '1') {
+      return;
+    }
+
+    this.log('[dbg]', ...args);
   }
 }

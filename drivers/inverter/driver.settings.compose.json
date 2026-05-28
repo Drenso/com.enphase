@@ -1,0 +1,14 @@
+[
+  {
+    "$extends": "username"
+  },
+  {
+    "$extends": "password"
+  },
+  {
+    "$extends": "envoy_ip"
+  },
+  {
+    "$extends": "envoy_serial"
+  }
+]

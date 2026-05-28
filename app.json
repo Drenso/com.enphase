@@ -41,6 +41,7 @@
       }
     ]
   },
+  "esm": true,
   "drivers": [
     {
       "platforms": [
@@ -80,15 +81,35 @@
           "id": "username",
           "type": "text",
           "label": {
-            "en": "Username"
+            "en": "Username",
+            "nl": "Gebruikersnaam"
           }
         },
         {
           "id": "password",
           "type": "password",
           "label": {
-            "en": "Password"
+            "en": "Password",
+            "nl": "Wachtwoord"
           }
+        },
+        {
+          "id": "envoy_ip",
+          "type": "text",
+          "label": {
+            "en": "Envoy IP address",
+            "nl": "Envoy IP-adres"
+          },
+          "value": ""
+        },
+        {
+          "id": "envoy_serial",
+          "type": "label",
+          "label": {
+            "en": "Envoy Serial Number",
+            "nl": "Envoy serienummer"
+          },
+          "value": ""
         }
       ],
       "name": {
@@ -160,14 +181,16 @@
           "id": "username",
           "type": "text",
           "label": {
-            "en": "Username"
+            "en": "Username",
+            "nl": "Gebruikersnaam"
           }
         },
         {
           "id": "password",
           "type": "password",
           "label": {
-            "en": "Password"
+            "en": "Password",
+            "nl": "Wachtwoord"
           }
         }
       ],

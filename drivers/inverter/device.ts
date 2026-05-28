@@ -1,8 +1,8 @@
-import https from 'https';
+import type { DiscoveryResult, DiscoveryStrategy } from 'homey';
 import fetch from 'node-fetch';
+import * as https from 'node:https';
 import EnphaseDevice from '../../lib/EnphaseDevice.js';
-import type { DiscoveryResult } from 'homey';
-import type { DiscoveryStrategy } from 'homey';
+import { XMLParser } from 'fast-xml-parser';
 
 interface EnphaseDiscoveryResult extends DiscoveryResult {
   address: string;
@@ -29,12 +29,16 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
   private discoveryStrategy?: DiscoveryStrategy;
 
   public async onInit(): Promise<void> {
-    await super.onInit();
-
     const { siteId } = this.getData();
     this.log(`Site ID: ${siteId}`);
 
-    if (this.homey.platform === 'local') {
+    // Load previous values from settings
+    this.localAddress = this.getSettings().envoy_ip;
+    this.localSerialNumber = this.getSettings().envoy_serial;
+
+    await super.onInit();
+
+    if ((this.homey.platform ?? 'local') === 'local') {
       this.discoveryStrategy = this.homey.discovery.getStrategy('enphase-envoy');
       this.discoveryStrategy.on('result', discoveryResult => {
         this.onDiscoveryResult(discoveryResult);
@@ -80,10 +84,34 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
   protected async onPollLocal(): Promise<void> {
     await super.onPollLocal();
 
-    if (!this.localAddress) return;
-    if (!this.localSerialNumber) return;
+    if (!this.localAddress) {
+      this.debug('No local address found, skipping local polling.');
+      // Without the local address, we cannot proceed with local polling
+      return;
+    }
+
+    if (!this.localSerialNumber) {
+      this.debug('No local serial number found, attempting to retrieve from Envoy');
+      // We do not have the serial number, so we should retrieve it from the Envoy
+      const infoRes = await fetch(`https://${this.localAddress}/info`, {
+        method: 'GET',
+        agent: this.localAgent,
+      });
+
+      const info = new XMLParser().parse(await infoRes.text()) as { envoy_info?: { device?: { sn?: string } } };
+      this.localSerialNumber = String(info.envoy_info?.device?.sn ?? '');
+      if (this.localSerialNumber === '') {
+        this.localSerialNumber = null;
+      }
+      this.scheduleSettingsUpdate();
+
+      if (!this.localSerialNumber) {
+        throw new Error('Could not retrieve serial number from Envoy');
+      }
+    }
 
     if (!this.localToken) {
+      this.debug('No local token found, attempting to retrieve from Entrez');
       this.localToken = await this.api.getEntrezToken({
         serialNumber: this.localSerialNumber,
       });
@@ -102,6 +130,7 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
     switch (res.status) {
       case 200: {
         const body = (await res.json()) as EnphaseLocalProductionData;
+        this.debug('Response from Envoy:', JSON.stringify(body));
 
         if (Array.isArray(body.production)) {
           const productionInverters = body.production.find(item => item.type === 'inverters');
@@ -151,13 +180,50 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
     this.localToken = null;
     this.localAddress = discoveryResult.address;
     this.localSerialNumber = discoveryResult.txt.serialnum;
+    this.scheduleSettingsUpdate();
 
     discoveryResult.once('addressChanged', () => {
       this.log(`Local Envoy Address Changed: ${this.localAddress} → ${discoveryResult.address}`);
       this.localAddress = discoveryResult.address;
+      this.scheduleSettingsUpdate();
     });
 
     this.pollLocal();
     return true;
+  }
+
+  public async onSettings({
+    newSettings,
+    changedKeys,
+  }: {
+    newSettings: { [p: string]: boolean | string | number | undefined | null };
+    changedKeys: string[];
+  }): Promise<void> {
+    if (changedKeys.includes('envoy_ip')) {
+      if ((this.homey.platform ?? 'local') !== 'local') {
+        throw new Error('Cannot change Envoy IP when not running on local platform');
+      }
+
+      this.log('Envoy IP changed by user, resetting serial');
+      this.localAddress = newSettings.envoy_ip as string;
+      this.localSerialNumber = null;
+      this.scheduleSettingsUpdate();
+      this.pollLocal();
+    }
+
+    await super.onSettings({
+      newSettings,
+      changedKeys,
+    });
+  }
+
+  private scheduleSettingsUpdate(): void {
+    this.homey.setTimeout(() => {
+      this.debug('Saving ip & serial to settings', this.localAddress, this.localSerialNumber);
+      this.setSettings({
+        envoy_ip: this.localAddress,
+        envoy_serial: this.localSerialNumber,
+      }).catch(this.error);
+    }, 5000);
   }
 }

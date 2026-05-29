@@ -209,7 +209,7 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
   }): Promise<void> {
     if (changedKeys.includes('envoy_ip')) {
       if ((this.homey.platform ?? 'local') !== 'local') {
-        throw new Error('Cannot change Envoy IP when not running on local platform');
+        throw new Error('Local communication is not supported with Homey Cloud, making it not possible to configure the Envoy IP.');
       }
 
       this.log('Envoy IP changed by user, resetting serial');

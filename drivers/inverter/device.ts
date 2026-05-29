@@ -1,4 +1,5 @@
 import type { DiscoveryResult, DiscoveryStrategy } from 'homey';
+import {isIP} from 'net';
 import fetch from 'node-fetch';
 import * as https from 'node:https';
 import EnphaseDevice from '../../lib/EnphaseDevice.js';
@@ -209,11 +210,17 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
   }): Promise<void> {
     if (changedKeys.includes('envoy_ip')) {
       if ((this.homey.platform ?? 'local') !== 'local') {
-        throw new Error('Local communication is not supported with Homey Cloud, making it not possible to configure the Envoy IP.');
+        throw new Error(this.homey.__('error.local_only'));
+      }
+
+      const envoyIp: string | null = newSettings.envoy_ip as string;
+      if (envoyIp && !isIP(envoyIp)) {
+        this.error('Invalid IP entered', envoyIp);
+        throw new Error(this.homey.__('error.invalid_ip'));
       }
 
       this.log('Envoy IP changed by user, resetting serial');
-      this.localAddress = newSettings.envoy_ip as string;
+      this.localAddress = envoyIp;
       this.localSerialNumber = null;
       this.scheduleSettingsUpdate();
       this.pollLocal();
@@ -229,8 +236,8 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
     this.homey.setTimeout(() => {
       this.debug('Saving ip & serial to settings', this.localAddress, this.localSerialNumber);
       this.setSettings({
-        envoy_ip: this.localAddress,
-        envoy_serial: this.localSerialNumber,
+        envoy_ip: this.localAddress ?? '',
+        envoy_serial: this.localSerialNumber ?? '',
       }).catch(this.error);
     }, 5000);
   }

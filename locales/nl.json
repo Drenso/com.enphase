@@ -1,0 +1,6 @@
+{
+  "error": {
+    "invalid_ip": "Ongeldig Envoy IP-adres ingevoerd.",
+    "local_only": "Lokale communicatie wordt niet ondersteund met Homey Cloud, waardoor het niet mogelijk is om het Envoy IP-adres te configureren."
+  }
+}

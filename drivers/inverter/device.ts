@@ -177,18 +177,26 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
   public onDiscoveryResult(discoveryResult: EnphaseDiscoveryResult): boolean {
     this.log(`Local Envoy Found: ${discoveryResult.address} — S/N: ${discoveryResult.txt.serialnum}`);
 
-    this.localToken = null;
-    this.localAddress = discoveryResult.address;
-    this.localSerialNumber = discoveryResult.txt.serialnum;
-    this.scheduleSettingsUpdate();
+    if (this.localAddress === discoveryResult.address && this.localSerialNumber === discoveryResult.txt.serialnum) {
+      this.debug('Local Envoy details unchanged');
+      return true;
+    } else {
+      this.localToken = null;
+      this.localAddress = discoveryResult.address;
+      this.localSerialNumber = discoveryResult.txt.serialnum;
+      this.scheduleSettingsUpdate();
 
+      // Execute new poll
+      this.pollLocal();
+    }
+
+    // Register address change listener
     discoveryResult.once('addressChanged', () => {
       this.log(`Local Envoy Address Changed: ${this.localAddress} → ${discoveryResult.address}`);
       this.localAddress = discoveryResult.address;
       this.scheduleSettingsUpdate();
     });
 
-    this.pollLocal();
     return true;
   }
 

@@ -37,5 +37,8 @@
   },
   "0.8.2": {
     "en": "Update inverter icon"
+  },
+  "0.9.0": {
+    "en": "Add support for manual Envoy IP configuration in device settings"
   }
 }

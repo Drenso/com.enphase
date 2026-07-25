@@ -26,6 +26,7 @@ export interface EnphaseSiteData {
 export interface EnphaseSiteTodayData {
   stats?: {
     [key: string]: {
+      start_time?: number;
       totals?: {
         production?: number;
         consumption?: number;

@@ -1,8 +1,9 @@
 import type { DiscoveryResult, DiscoveryStrategy } from 'homey';
-import {isIP} from 'net';
+import { isIP } from 'net';
 import fetch from 'node-fetch';
 import * as https from 'node:https';
 import EnphaseDevice from '../../lib/EnphaseDevice.js';
+import { resolveDailyMeter } from '../../lib/dailyMeter.js';
 import { XMLParser } from 'fast-xml-parser';
 
 interface EnphaseDiscoveryResult extends DiscoveryResult {
@@ -74,9 +75,10 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
       );
     }
 
-    const meterPowerDay = todayData?.stats?.[0]?.totals?.production; // in Wh
-    if (typeof meterPowerDay === 'number') {
-      await this.setCapabilityValue('meter_power.day', meterPowerDay / 1000).catch(err =>
+    const dayStat = todayData?.stats?.[0];
+    const daily = resolveDailyMeter(dayStat?.start_time, dayStat?.totals?.production, Date.now());
+    if (daily !== 'hold') {
+      await this.setCapabilityValue('meter_power.day', daily.kWh).catch(err =>
         this.error('Error setting meter_power.day:', err),
       );
     }

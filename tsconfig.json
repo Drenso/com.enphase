@@ -6,5 +6,6 @@
     "moduleResolution": "NodeNext",
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true
-  }
+  },
+  "exclude": ["tests", ".testbuild"]
 }

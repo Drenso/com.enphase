@@ -9,6 +9,8 @@ tests
 env.json.dist
 renovate.json
 tsconfig.json
+tsconfig.tests.json
+.testbuild
 LICENSE
 package-lock.json
 env.json.dev

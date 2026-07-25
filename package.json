@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "test": "tsc -p tsconfig.tests.json && node --test .testbuild/tests/dailyMeter.test.js",
     "lint": "eslint",
     "fix": "eslint --fix",
     "validate": "homey app validate --level=verified",

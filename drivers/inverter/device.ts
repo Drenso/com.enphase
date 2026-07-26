@@ -29,6 +29,7 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
   private localAddress: string | null = null;
   private localToken: string | null = null;
   private discoveryStrategy?: DiscoveryStrategy;
+  private midnightTimeout?: NodeJS.Timeout;
 
   public async onInit(): Promise<void> {
     const { siteId } = this.getData();
@@ -51,6 +52,14 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
         this.onDiscoveryResult(discoveryResult as EnphaseDiscoveryResult);
       }
     }
+  }
+
+  public async onUninit(): Promise<void> {
+    if (this.midnightTimeout) {
+      this.homey.clearTimeout(this.midnightTimeout);
+    }
+
+    await super.onUninit();
   }
 
   protected async onPollCloud(): Promise<void> {
@@ -82,6 +91,8 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
         this.error('Error setting meter_power.day:', err),
       );
     }
+
+    this.scheduleMidnightReset(dayStat?.start_time);
   }
 
   protected async onPollLocal(): Promise<void> {
@@ -242,5 +253,29 @@ export default class EnphaseDeviceInverter extends EnphaseDevice {
         envoy_serial: this.localSerialNumber ?? '',
       }).catch(this.error);
     }, 5000);
+  }
+
+  /** Uses the window's own `start_time`, so the timer and the poll share one boundary and no hub timezone is read. */
+  private scheduleMidnightReset(startTime: number | undefined): void {
+    if (this.midnightTimeout) {
+      this.homey.clearTimeout(this.midnightTimeout);
+      this.midnightTimeout = undefined;
+    }
+
+    if (typeof startTime !== 'number') {
+      return;
+    }
+
+    const delay = (startTime + 86400) * 1000 - Date.now();
+    if (delay <= 0 || delay > 25 * 60 * 60 * 1000) {
+      return;
+    }
+
+    this.midnightTimeout = this.homey.setTimeout(() => {
+      this.midnightTimeout = undefined;
+      this.setCapabilityValue('meter_power.day', 0).catch(err =>
+        this.error('Error resetting meter_power.day at midnight:', err),
+      );
+    }, delay);
   }
 }

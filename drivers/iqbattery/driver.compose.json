@@ -16,7 +16,9 @@
     "iqbattery_last_update",
     "iqbattery_level",
     "iqbattery_connectiontype",
-    "measure_battery"
+    "measure_battery",
+    "meter_power.charged",
+    "meter_power.discharged"
   ],
   "statusIndicator": "measure_battery",
   "capabilitiesOptions": {
@@ -28,7 +30,9 @@
     }
   },
   "energy": {
-    "batteries": ["INTERNAL"]
+    "homeBattery": true,
+    "meterPowerImportedCapability": "meter_power.charged",
+    "meterPowerExportedCapability": "meter_power.discharged"
   },
   "images": {
     "small": "{{driverAssetsPath}}/images/small.png",

@@ -44,11 +44,13 @@ export default class EnphaseDeviceIQBattery extends EnphaseDevice {
       );
     }
 
+    // Charge / Discharge (Tageswert für Anzeige + Lifetime-Zähler für Homey Energy)
     const accucharge = todayData?.stats?.[0]?.totals?.charge; // in Wh
     if (typeof accucharge === 'number') {
       await this.setCapabilityValue('iqbattery_charge', accucharge / 1000).catch(err =>
         this.error('Error setting iqbattery_charge:', err),
       );
+      await this.accumulateLifetimeMeter('meter_power.charged', 'lifetimeChargeBaseline', accucharge);
     }
 
     const accudischarge = todayData?.stats?.[0]?.totals?.discharge; // in Wh
@@ -56,6 +58,7 @@ export default class EnphaseDeviceIQBattery extends EnphaseDevice {
       await this.setCapabilityValue('iqbattery_discharge', accudischarge / 1000).catch(err =>
         this.error('Error setting iqbattery_discharge:', err),
       );
+      await this.accumulateLifetimeMeter('meter_power.discharged', 'lifetimeDischargeBaseline', accudischarge);
     }
 
     // Connection Type
@@ -110,6 +113,45 @@ export default class EnphaseDeviceIQBattery extends EnphaseDevice {
           this.error('Error iqbattery_last_update:', err),
         );
       }
+    }
+  }
+
+  /**
+   * Wandelt een dagelijks resettende cumulatieve waarde (Enphase "today" stats, in Wh)
+   * om in een levenslang oplopende meter_power-capability (in kWh), zoals Homey Energy
+   * dat verwacht (nooit resetten, alleen stijgen).
+   *
+   * @param capability De meter_power-(sub)capability, bv. 'meter_power.charged'
+   * @param storeKey De store-key waarin de laatst geziene "today"-waarde wordt bewaard
+   * @param todayValueWh De huidige "today"-waarde van Enphase, in Wh
+   */
+  private async accumulateLifetimeMeter(
+    capability: string,
+    storeKey: string,
+    todayValueWh: number,
+  ): Promise<void> {
+    const previousToday = (this.getStoreValue(storeKey) as number | null) ?? null;
+
+    let deltaWh = 0;
+    if (previousToday === null) {
+      // Eerste poll ooit: alleen baseline zetten, geen sprong optellen
+      deltaWh = 0;
+    } else if (todayValueWh >= previousToday) {
+      deltaWh = todayValueWh - previousToday;
+    } else {
+      // Dagwissel: Enphase heeft gereset naar ~0 -> de volledige nieuwe waarde is de delta
+      deltaWh = todayValueWh;
+    }
+
+    await this.setStoreValue(storeKey, todayValueWh).catch(err =>
+      this.error(`Error storing ${storeKey}:`, err),
+    );
+
+    if (deltaWh > 0) {
+      const current = (this.getCapabilityValue(capability) as number) ?? 0;
+      await this.setCapabilityValue(capability, current + deltaWh / 1000).catch(err =>
+        this.error(`Error setting ${capability}:`, err),
+      );
     }
   }
 }
